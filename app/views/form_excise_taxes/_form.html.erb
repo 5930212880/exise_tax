@@ -1,0 +1,27 @@
+<%= form_with(model: form_excise_tax, local: true) do |form| %>
+  <% if form_excise_tax.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(form_excise_tax.errors.count, "error") %> prohibited this form_excise_tax from being saved:</h2>
+
+      <ul>
+      <% form_excise_tax.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= form.label :formreferencenumber %>
+    <%= form.text_field :formreferencenumber %>
+  </div>
+
+  <div class="field">
+    <%= form.label :formeffectivedate %>
+    <%= form.date_select :formeffectivedate %>
+  </div>
+
+  <div class="actions">
+    <%= form.submit %>
+  </div>
+<% end %>
