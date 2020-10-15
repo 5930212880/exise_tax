@@ -7,7 +7,7 @@ class FormExciseTaxesController < ApplicationController
 
 
   def new
-    @form_excise_tax = FormExciseTax.new
+    # @form_excise_tax = FormExciseTax.new
   end
 
   # GET /excisetaxes
@@ -49,7 +49,7 @@ class FormExciseTaxesController < ApplicationController
     #map data to db
       api_data.each do |value|
           if FormExciseTax.exists?(['formreferencenumber LIKE ?',"%#{value['FormReferenceNumber']}%"])
-            FormExciseTax.update(
+            FormExciseTax.where(['formreferencenumber LIKE ?',"%#{value['FormReferenceNumber']}%"]).update(
                   cusname: value['CusName'],
                   formeffectivedate: value['FormEffectiveDate'],
                   formreferencenumber: value['FormReferenceNumber'],
@@ -70,11 +70,12 @@ class FormExciseTaxesController < ApplicationController
     end
   end
 
+
   # POST /excisetaxes/saveproduct/[:formreferencenumber]
   def save_form_product_source #ส่งหมายเลขทะเบียนรถ/seal/maker
 
   if @formref.signflag == '2'
-    @listcheck = @a.formdata['GoodsListCheck']['GoodsEntry'].map do |v| 
+    @listcheck = @formref.formdata['GoodsListCheck']['GoodsEntry'].map do |v| 
       { UnitCode: v['UnitCode'], 
         Amount: v['SouAmount'], 
         SeqNo: v['SeqNo'], 
@@ -100,9 +101,9 @@ class FormExciseTaxesController < ApplicationController
       IpAddress: "10.11.1.10",
       Operation: "1",
       RequestData: { FormCode: "PS28",
-      FormReferenceNumber: @a.formreferencenumber,
-      FormEffectiveDate: @a.formeffectivedate.strftime('%Y%m%d'),
-      OffCode: @a.formdata['HomeOfficeId'],
+      FormReferenceNumber: @formref.formreferencenumber,
+      FormEffectiveDate: @formref.formeffectivedate.strftime('%Y%m%d'),
+      OffCode: @formref.formdata['HomeOfficeId'],
       TransFrom: "1",
       Remark: "",
       GoodsList: {
@@ -111,10 +112,10 @@ class FormExciseTaxesController < ApplicationController
       } 
     }.to_json
 
-    saveproduct = RestClient.post 'http://webtest.excise.go.th/EDRestServicesUAT/rtn/SaveFormProductSource', 
-      @requestdata, { content_type: :json }
+    # saveproduct = RestClient.post 'http://webtest.excise.go.th/EDRestServicesUAT/rtn/SaveFormProductSource', 
+    #   @requestdata, { content_type: :json }
     
-    render json: saveproduct
+    render json: @requestdata
 
   else
     render json: { ResponseMessage: 'ไม่สามารถบันทึกข้อมูลได้' } 

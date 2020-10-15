@@ -1,5 +1,5 @@
 Rails.application.routes.draw do
-  # get 'excisetaxes/:formeffectivedate', to: 'form_excise_taxes#inquiry'
+  get 'form_excise_taxes/:formeffectivedate', to: 'form_excise_taxes#inquiry'
   get 'form_excise_taxes', to: 'form_excise_taxes#index'
   # get 'get_data/updatedate', to: 'form_excise_taxes#updatedate'
   get 'form_excise_taxes/new', to: 'form_excise_taxes#new'
