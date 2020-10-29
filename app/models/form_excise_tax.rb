@@ -16,6 +16,6 @@
 #  index_form_excise_taxes_on_formreferencenumber  (formreferencenumber)
 #
 class FormExciseTax < ApplicationRecord
-    validates :formreferencenumber, length: { maximum: 14 }
-    
+    validates :formreferencenumber, presence: true
+    validates :formeffectivedate, presence: true
 end

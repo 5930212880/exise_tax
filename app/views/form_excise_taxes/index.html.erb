@@ -9,19 +9,18 @@
       <th>Formeffectivedate</th>
       <th>Cusname</th>
       <th>Signflag</th>
-      <th>Formdata</th>
       <th colspan="3"></th>
     </tr>
   </thead>
 
   <tbody>
-    <% @form_excise_taxes.each do |form_excise_tax| %>
+    <% @form_excise_taxes.each do |excise| %>
       <tr>
-        <td><%= form_excise_tax.formreferencenumber %></td>
-        <td><%= form_excise_tax.formeffectivedate %></td>
-        <td><%= form_excise_tax.cusname %></td>
-        <td><%= form_excise_tax.signflag %></td>
-
+        <td><%= excise.formreferencenumber %></td>
+        <td><%= excise.formeffectivedate.strftime('%Y-%m-%d') %></td>
+        <td><%= excise.cusname %></td>
+        <td><%= excise.signflag %></td>
+        <td><%= link_to 'show', form_excise_tax_path(excise)  %> <%# excise in block each do %>
       </tr>
     <% end %>
   </tbody>
@@ -29,4 +28,4 @@
 
 <br>
 
-<%= link_to 'New Form Excise Tax' %>
+<%= link_to 'New Form Excise Tax' , excisetax_new_path %>

@@ -11,17 +11,29 @@
     </div>
   <% end %>
 
-  <div class="field">
-    <%= form.label :formreferencenumber %>
-    <%= form.text_field :formreferencenumber %>
+   <div class="field">
+    <%= form.label :FormreferenceNumber %>
+    <%= form.text_field :formreferencenumber, required: true %>
   </div>
 
   <div class="field">
-    <%= form.label :formeffectivedate %>
-    <%= form.date_select :formeffectivedate %>
+    <%= form.label :FormeffectiveDateFrom %>
+    <%= form.text_field :formeffectivedatefrom, class: 'datepicker', 'placeholder'=> "yyyymmdd", required: true %><br/>
+  </div>
+  
+  <div class="field">
+    <%= form.label :FormeffectiveDateTo %>
+    <%= form.text_field :formeffectivedateto, class: 'datepicker', 'placeholder'=> "yyyymmdd", required: true %><br/>
+  </div>
+
+  <div class="field">
+    <%= form.label :HomeOfficeId %>
+    <%= form.select :homeofficeid, ["100300", "010400"] %>
   </div>
 
   <div class="actions">
-    <%= form.submit %>
+    <%= form.submit 'query form' %>
   </div>
+
 <% end %>
+

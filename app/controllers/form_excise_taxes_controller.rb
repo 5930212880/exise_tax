@@ -7,19 +7,21 @@ class FormExciseTaxesController < ApplicationController
 
 
   def new
-    # @form_excise_tax = FormExciseTax.new
+    @form_excise_tax = FormExciseTax.new
+  end
+
+  def show
+    @excise_tax = FormExciseTax.find(params[:id])
   end
 
   # GET /excisetaxes
   # GET /excisetaxes.json
   def index
-    @form_excise_taxes = FormExciseTax.all
+    @form_excise_taxes = FormExciseTax.all.order('formeffectivedate ASC')
   end
 
   # GET /excisetaxes/formeffectivedate
   def inquiry
-    url = params[:formeffectivedate]
-    
     data = RestClient.post 'http://webtest.excise.go.th/EDRestServicesUAT/rtn/InquiryPs0501',{
        SystemId:"systemid", 
        UserName:"my_username", 
@@ -27,12 +29,13 @@ class FormExciseTaxesController < ApplicationController
        IpAddress:"10.11.1.10", 
        Operation:"1", 
        RequestData: {
-        FormReferenceNumber: "", 
-        FormEffectiveDateFrom: "", 
-        FormEffectiveDateTo: "", 
-        HomeOfficeId: "",
+        FormReferenceNumber: "#{params[:form_excise_tax][:formreferencenumber]}", 
+        FormEffectiveDateFrom: "#{params[:form_excise_tax][:formeffectivedatefrom]}", 
+        FormEffectiveDateTo: "#{params[:form_excise_tax][:formeffectivedateto]}",
+        RegId: "",
+        HomeOfficeId: "#{params[:form_excise_tax][:homeofficeid]}",
         FormStatus: "A", 
-        FormUpdateDate:"#{url}", 
+        FormUpdateDate:"", 
         ProductCategory:"01"
        } 
      }.to_json, 
@@ -41,7 +44,7 @@ class FormExciseTaxesController < ApplicationController
      }
     
     if JSON.parse(data)['ResponseCode'] != "OK"
-      render json: { status: 404, error: "Not Found" }, status: :not_found
+        render json: { status: 404, error: "Not Found" }, status: :not_found
     else
     #parse json
       api_data = JSON.parse(data)['ResponseData']['FormInformation']['FormData']
@@ -66,7 +69,10 @@ class FormExciseTaxesController < ApplicationController
               )
           end    
       end
-      render json: FormExciseTax.all
+      respond_to do |format|
+        format.html { redirect_to form_excise_taxes_path }
+        format.json { render json: FormExciseTax.all }
+      end
     end
   end
 
@@ -74,57 +80,66 @@ class FormExciseTaxesController < ApplicationController
   # POST /excisetaxes/saveproduct/[:formreferencenumber]
   def save_form_product_source #ส่งหมายเลขทะเบียนรถ/seal/maker
 
-  if @formref.signflag == '2'
-    @listcheck = @formref.formdata['GoodsListCheck']['GoodsEntry'].map do |v| 
-      { UnitCode: v['UnitCode'], 
-        Amount: v['SouAmount'], 
-        SeqNo: v['SeqNo'], 
-        TransportName: v['SouTransportName'], 
-        SealNo: v['SouSealNo'], 
-        SealAmount: v['SouSealAmount'], 
-        Marker: v['SouMarker'], 
-        GoodsInformation: { 
-          ProductCode: v['ProductCode'], 
-          CategoryCode1: v['BrandMainCode'], 
-          CategoryCode2: v['BrandSecondCode'], 
-          CategoryCode3: v['ModelCode'], 
-          CategoryCode4: v['SizeCode'], 
-          CategoryCode5: v['DegreeCode']
-        } 
-      }
-    end 
+  # if @formref.signflag == '2'
 
-    @requestdata = { 
-      SystemId: "systemid",
-      UserName: "my_username",
-      Password: "bbbbb",
-      IpAddress: "10.11.1.10",
-      Operation: "1",
-      RequestData: { FormCode: "PS28",
-      FormReferenceNumber: @formref.formreferencenumber,
-      FormEffectiveDate: @formref.formeffectivedate.strftime('%Y%m%d'),
-      OffCode: @formref.formdata['HomeOfficeId'],
-      TransFrom: "1",
-      Remark: "",
-      GoodsList: {
-        GoodsEntry: @listcheck
-      }
-      } 
-    }.to_json
+    petrol = RestClient.get 'http://petrol.excise-online.com/truck_trips.json',{
+        'X-User-Email' => 'api_truck@petrol.excise-online.com',
+        'X-User-Token' => 'ofFd99ZSDTpKzxTeV-Ts',
+        :params => {
+            'q[tax_number_eq]' => "#{@formref.formreferencenumber}",
+            'limit' => '1'
+        }
+    }
+    parse = JSON.parse(petrol)
+
+    # @listcheck = @formref.formdata['GoodsListCheck']['GoodsEntry'].map do |v| 
+    #   { UnitCode: v['UnitCode'], 
+    #     Amount: v['SouAmount'], 
+    #     SeqNo: v['SeqNo'], 
+    #     TransportName: , 
+    #     SealNo: v['SouSealNo'], 
+    #     SealAmount: v['SouSealAmount'], 
+    #     Marker: v['SouMarker'], 
+    #     GoodsInformation: { 
+    #       ProductCode: v['ProductCode'], 
+    #       CategoryCode1: v['BrandMainCode'], 
+    #       CategoryCode2: v['BrandSecondCode'], 
+    #       CategoryCode3: v['ModelCode'], 
+    #       CategoryCode4: v['SizeCode'], 
+    #       CategoryCode5: v['DegreeCode']
+    #     } 
+    #   }
+    # end 
+
+    # @requestdata = { 
+    #   SystemId: "systemid",
+    #   UserName: "my_username",
+    #   Password: "bbbbb",
+    #   IpAddress: "10.11.1.10",
+    #   Operation: "1",
+    #   RequestData: { FormCode: "PS28",
+    #   FormReferenceNumber: @formref.formreferencenumber,
+    #   FormEffectiveDate: @formref.formeffectivedate.strftime('%Y%m%d'),
+    #   OffCode: @formref.formdata['HomeOfficeId'],
+    #   TransFrom: "1",
+    #   Remark: "",
+    #   GoodsList: {
+    #     GoodsEntry: @listcheck
+    #   }
+    #   } 
+    # }.to_json
 
     # saveproduct = RestClient.post 'http://webtest.excise.go.th/EDRestServicesUAT/rtn/SaveFormProductSource', 
     #   @requestdata, { content_type: :json }
-    
-    render json: @requestdata
 
-  else
-    render json: { ResponseMessage: 'ไม่สามารถบันทึกข้อมูลได้' } 
-  end
+    render json: parse 
+  # else
+  #   render json: { ResponseMessage: 'ไม่สามารถบันทึกข้อมูลได้' } 
+  # end
 end
 
   # POST /excisetaxes/inquirychecklistsou/[:formreferencenumber] 
   def inquiry_form_product_checklist_sou #ดึงรายชื่อผู้เซ็น ต้นทาง signflag = 4  
-    # formref = FormDatum.find_by(formreferencenumber: params[:formreferencenumber])
 
     @productchecklistsou = {
       SystemId: "systemid",
@@ -148,7 +163,6 @@ end
 
   # POST /excisetaxes/inquirychecklistdes/[:formreferencenumber] 
   def inquiry_form_product_checklist_des #ดึงรายชื่อผู้เซ็น ปลายทาง signflag = 2  
-    # checklist = FormDatum.find_by(formreferencenumber: params[:formreferencenumber])
 
     @productchecklistdes = {
       SystemId: "systemid",
@@ -219,20 +233,19 @@ end
   #   end
   # end
 
-  # private
-  #   # Use callbacks to share common setup or constraints between actions.
-  #   def set_form_excise_tax
-  #     @form_excise_tax = FormExciseTax.find(params[:id])
-  #   end
+  private
+   # Use callbacks to share common setup or constraints between actions.
+  # def set_form_excise_tax
+  #   @form_excise_tax = FormExciseTax.find(params[:id])
+  # end
 
-  #   # Only allow a list of trusted parameters through.
+  def find_by_formreferencenumber
+    @formref = FormExciseTax.find_by(formreferencenumber: params[:formreferencenumber])
+  end
+
+  # Only allow a list of trusted parameters through.
   #   def form_excise_tax_params
   #     params.require(:form_excise_tax).permit(:formreferencenumber, :formeffectivedate, :cusname, :signflag, :formdata)
   #   end
-
-  private
-    def find_by_formreferencenumber
-      @formref = FormExciseTax.find_by(formreferencenumber: params[:formreferencenumber])
-    end
 
 end
